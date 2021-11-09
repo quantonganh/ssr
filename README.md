@@ -14,6 +14,13 @@ $ make lint
 $ make test
 ```
 
+## Integration test
+
+```shell
+$ docker-compose up -d
+$ make integration-test
+```
+
 ## Build
 
 ```shell
