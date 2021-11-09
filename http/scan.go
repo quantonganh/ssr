@@ -3,11 +3,16 @@ package http
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 
 	"github.com/quantonganh/ssr"
+)
+
+const (
+	defaultLimit = 10
 )
 
 func (s *Server) CreateScanHandler(w http.ResponseWriter, r *http.Request) *appError {
@@ -157,7 +162,25 @@ func (s *Server) DeleteScanHandler(w http.ResponseWriter, r *http.Request) *appE
 }
 
 func (s *Server) ListScansHandler(w http.ResponseWriter, r *http.Request) *appError {
-	scans, err := s.ScanService.ListScans()
+	limitStr := r.FormValue("limit")
+	limit, err := strconv.ParseInt(limitStr, 10, 64)
+	if err != nil {
+		return &appError{
+			Error:   err,
+			Message: "invalid limit parameter",
+			Code:    http.StatusInternalServerError,
+		}
+	}
+	if limit == 0 {
+		limit = defaultLimit
+	}
+	cursor := r.FormValue("cursor")
+	param := ssr.FetchParam{
+		Limit:  uint64(limit),
+		Cursor: cursor,
+	}
+
+	scans, nextCursor, err := s.ScanService.ListScans(param)
 	if err != nil {
 		return &appError{
 			Error:   err,
@@ -173,6 +196,7 @@ func (s *Server) ListScansHandler(w http.ResponseWriter, r *http.Request) *appEr
 		}
 	}
 
+	w.Header().Set("X-NextCursor", nextCursor)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	_, err = w.Write(response)
 	if err != nil {

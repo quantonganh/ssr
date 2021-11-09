@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS repository (
 INSERT INTO repository (provider, full_name, description) VALUES ('GitHub', 'quantonganh/ssr', 'Security Scan Result');
 
 CREATE TABLE IF NOT EXISTS scan (
-    id TEXT PRIMARY KEY,
+    id VARCHAR(255) PRIMARY KEY NOT NULL DEFAULT gen_random_uuid (),
     status VARCHAR(11),
     repository_id SERIAL REFERENCES repository (id) ON UPDATE CASCADE ON DELETE CASCADE,
     findings JSONB,
@@ -18,3 +18,5 @@ CREATE TABLE IF NOT EXISTS scan (
 );
 
 CREATE INDEX repository_id_idx ON scan (repository_id);
+
+CREATE INDEX pagination_idx ON scan (finished_at, id);

@@ -1,3 +1,5 @@
+// +build !integration
+
 package postgresql
 
 import (
@@ -6,6 +8,7 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -54,7 +57,7 @@ func testCreateScan(t *testing.T) {
 		FinishedAt:   now,
 	}
 	rows := sqlmock.NewRows([]string{"id", "status", "repository_id", "findings", "queued_at", "scanning_at", "finished_at"}).AddRow(scan.ID, scan.Status, scan.RepositoryID, scan.Findings, scan.QueuedAt, scan.ScanningAt, scan.FinishedAt)
-	mock.ExpectQuery(regexp.QuoteMeta(sqlInsertScan)).WithArgs(scan.ID, scan.Status, scan.RepositoryID, scan.Findings, scan.QueuedAt, scan.ScanningAt, scan.FinishedAt).WillReturnRows(rows)
+	mock.ExpectQuery(regexp.QuoteMeta(sqlInsertScan)).WithArgs(scan.Status, scan.RepositoryID, scan.Findings, scan.QueuedAt, scan.ScanningAt, scan.FinishedAt).WillReturnRows(rows)
 
 	scanService := NewScanService(db)
 	scanResult, err := scanService.CreateScan(scan)
@@ -138,14 +141,19 @@ func testListScans(t *testing.T) {
 		FinishedAt:   now,
 	}
 	rows := sqlmock.NewRows([]string{"id", "status", "repository_id", "findings", "queued_at", "scanning_at", "finished_at"}).AddRow(scan.ID, scan.Status, scan.RepositoryID, scan.Findings, scan.QueuedAt, scan.ScanningAt, scan.FinishedAt)
-	mock.ExpectQuery(regexp.QuoteMeta(sqlSelectAllScans)).WillReturnRows(rows)
+	queryBuilder := squirrel.Select("id", "status", "repository_id", "findings", "queued_at", "scanning_at", "finished_at").From("scan").PlaceholderFormat(squirrel.Dollar).OrderBy("finished_at DESC, id DESC")
+	query, _, err := queryBuilder.ToSql()
+	require.NoError(t, err)
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WillReturnRows(rows)
 
 	scanService := NewScanService(db)
-	scans, err := scanService.ListScans()
+	scans, _, err := scanService.ListScans(ssr.FetchParam{
+		Limit:  1,
+	})
 	require.NoError(t, err)
+	assert.Equal(t, 1, len(scans))
+	assert.Equal(t, scanID, scans[0].ID)
 	assert.Equal(t, ssr.InProgress, scans[0].Status)
-	assert.Equal(t, "api.go", scans[0].Findings[0].Location.Path)
-	assert.Equal(t, "G402", scans[0].Findings[0].RuleID)
 }
 
 func testUpdateScan(t *testing.T) {

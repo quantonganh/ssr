@@ -74,7 +74,13 @@ func (f *Findings) Scan(value interface{}) error {
 type ScanService interface {
 	CreateScan(s *Scan) (*Scan, error)
 	GetScan(id uuid.UUID) (*Scan, error)
-	ListScans() ([]*Scan, error)
+	ListScans(param FetchParam) (scans []*Scan, nextCursor string, err error)
 	UpdateScan(id uuid.UUID, status Status, findings Findings) (*Scan, error)
 	DeleteScan(id uuid.UUID) error
 }
+
+type FetchParam struct {
+	Limit uint64
+	Cursor string
+}
+

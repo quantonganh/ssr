@@ -46,7 +46,9 @@ func TestScanHandler(t *testing.T) {
 	scanService.On("GetScan", scanID).Return(scan, nil)
 	scanService.On("UpdateScan", scanID, scan.Status, ssr.Findings{finding}).Return(scan, nil)
 	scanService.On("DeleteScan", scanID).Return(nil)
-	scanService.On("ListScans").Return([]*ssr.Scan{scan}, nil)
+	scanService.On("ListScans", ssr.FetchParam{
+		Limit:  1,
+	}).Return([]*ssr.Scan{scan}, "", nil)
 
 	t.Run("create scan", func(t *testing.T) {
 		testCreateScanHandler(t, scan, scanService)
@@ -116,15 +118,15 @@ func testDeleteScanHandler(t *testing.T, scanID uuid.UUID, scanService ssr.ScanS
 }
 
 func testListScansHandler(t *testing.T, scanService ssr.ScanService) {
-	req := httptest.NewRequest(http.MethodGet, "/scans", nil)
+	req := httptest.NewRequest(http.MethodGet, "/scans?limit=1", nil)
 	rr := httptest.NewRecorder()
 	s := NewServer(nil, scanService)
 	s.router.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusOK, rr.Code)
-	assert.Equal(t, http.StatusOK, rr.Code)
 	var scans []*ssr.Scan
 	require.NoError(t, json.NewDecoder(rr.Body).Decode(&scans))
+	assert.Equal(t, 1, len(scans))
 	assert.Equal(t, uint64(1), scans[0].RepositoryID)
 	assert.Equal(t, ssr.Success, scans[0].Status)
 }

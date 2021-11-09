@@ -17,29 +17,21 @@ import (
 	"github.com/quantonganh/ssr"
 )
 
+var scanID uuid.UUID
+
 func TestScanService(t *testing.T) {
-	scanID := uuid.New()
+	t.Run("create scan", testCreateScan)
 
-	t.Run("create scan", func(t *testing.T) {
-		testCreateScan(t, scanID)
-	})
+	t.Run("get scan", testGetScan)
 
-	t.Run("get scan", func(t *testing.T) {
-		testGetScan(t, scanID)
-	})
+	t.Run("update scan", testUpdateScan)
 
-	t.Run("update scan", func(t *testing.T) {
-		testUpdateScan(t, scanID)
-	})
-
-	t.Run("delete scan", func(t *testing.T) {
-		testDeleteScan(t, scanID)
-	})
+	t.Run("delete scan", testDeleteScan)
 
 	t.Run("list scans", testListScans)
 }
 
-func testCreateScan(t *testing.T, scanID uuid.UUID) {
+func testCreateScan(t *testing.T) {
 	finding := ssr.Finding{
 		Type:     "sast",
 		RuleID:   "G402",
@@ -58,7 +50,6 @@ func testCreateScan(t *testing.T, scanID uuid.UUID) {
 	}
 	now := time.Now()
 	scan := &ssr.Scan{
-		ID:           scanID,
 		Status:       ssr.InProgress,
 		RepositoryID: 1,
 		Findings:     ssr.Findings{finding},
@@ -76,9 +67,14 @@ func testCreateScan(t *testing.T, scanID uuid.UUID) {
 	resp, err := client.Do(req)
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var scanResult ssr.Scan
+	err = json.NewDecoder(resp.Body).Decode(&scanResult)
+	require.NoError(t, err)
+	scanID = scanResult.ID
 }
 
-func testGetScan(t *testing.T, scanID uuid.UUID) {
+func testGetScan(t *testing.T) {
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:8080/scans/%s", scanID), nil)
 	require.NoError(t, err)
 
@@ -93,7 +89,7 @@ func testGetScan(t *testing.T, scanID uuid.UUID) {
 	assert.Equal(t, ssr.InProgress, scanResult.Status)
 }
 
-func testUpdateScan(t *testing.T, scanID uuid.UUID) {
+func testUpdateScan(t *testing.T) {
 	finding := ssr.Finding{
 		Type:     "sast",
 		RuleID:   "G402",
@@ -136,7 +132,7 @@ func testUpdateScan(t *testing.T, scanID uuid.UUID) {
 	assert.Equal(t, ssr.Success, scanResult.Status)
 }
 
-func testDeleteScan(t *testing.T, scanID uuid.UUID) {
+func testDeleteScan(t *testing.T) {
 	req, err := http.NewRequest(http.MethodDelete, fmt.Sprintf("http://localhost:8080/scans/%s", scanID), nil)
 	require.NoError(t, err)
 
@@ -147,7 +143,7 @@ func testDeleteScan(t *testing.T, scanID uuid.UUID) {
 }
 
 func testListScans(t *testing.T) {
-	req, err := http.NewRequest(http.MethodGet, "http://localhost:8080/scans", nil)
+	req, err := http.NewRequest(http.MethodGet, "http://localhost:8080/scans?limit=1", nil)
 	require.NoError(t, err)
 
 	client := http.Client{}
