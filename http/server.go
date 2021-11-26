@@ -59,11 +59,11 @@ func NewServer(repositoryService ssr.RepositoryService, scanService ssr.ScanServ
 
 	s.server.Handler = http.HandlerFunc(s.serveHTTP)
 
-	s.router.HandleFunc("/scans/{repoID}", s.Error(s.CreateScanHandler)).Methods(http.MethodPost)
-	s.router.HandleFunc("/scans/{scanID}", s.Error(s.GetScanHandler)).Methods(http.MethodGet)
-	s.router.HandleFunc("/scans/{scanID}", s.Error(s.UpdateScanHandler)).Methods(http.MethodPut)
-	s.router.HandleFunc("/scans/{scanID}", s.Error(s.DeleteScanHandler)).Methods(http.MethodDelete)
-	s.router.HandleFunc("/scans", s.Error(s.ListScansHandler)).Methods(http.MethodGet)
+	s.router.Handle("/scans/{repoID}", appHandler(s.CreateScanHandler)).Methods(http.MethodPost)
+	s.router.Handle("/scans/{scanID}", appHandler(s.GetScanHandler)).Methods(http.MethodGet)
+	s.router.Handle("/scans/{scanID}", appHandler(s.UpdateScanHandler)).Methods(http.MethodPut)
+	s.router.Handle("/scans/{scanID}", appHandler(s.DeleteScanHandler)).Methods(http.MethodDelete)
+	s.router.Handle("/scans", appHandler(s.ListScansHandler)).Methods(http.MethodGet)
 
 	return s
 }
