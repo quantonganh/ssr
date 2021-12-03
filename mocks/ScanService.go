@@ -74,34 +74,27 @@ func (_m *ScanService) GetScan(id uuid.UUID) (*ssr.Scan, error) {
 	return r0, r1
 }
 
-// ListScans provides a mock function with given fields: param
-func (_m *ScanService) ListScans(param ssr.FetchParam) ([]*ssr.Scan, string, error) {
-	ret := _m.Called(param)
+// ListScans provides a mock function with given fields: page, limit
+func (_m *ScanService) ListScans(page int, limit int) ([]*ssr.Scan, error) {
+	ret := _m.Called(page, limit)
 
 	var r0 []*ssr.Scan
-	if rf, ok := ret.Get(0).(func(ssr.FetchParam) []*ssr.Scan); ok {
-		r0 = rf(param)
+	if rf, ok := ret.Get(0).(func(int, int) []*ssr.Scan); ok {
+		r0 = rf(page, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*ssr.Scan)
 		}
 	}
 
-	var r1 string
-	if rf, ok := ret.Get(1).(func(ssr.FetchParam) string); ok {
-		r1 = rf(param)
+	var r1 error
+	if rf, ok := ret.Get(1).(func(int, int) error); ok {
+		r1 = rf(page, limit)
 	} else {
-		r1 = ret.Get(1).(string)
+		r1 = ret.Error(1)
 	}
 
-	var r2 error
-	if rf, ok := ret.Get(2).(func(ssr.FetchParam) error); ok {
-		r2 = rf(param)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
+	return r0, r1
 }
 
 // UpdateScan provides a mock function with given fields: id, status, findings

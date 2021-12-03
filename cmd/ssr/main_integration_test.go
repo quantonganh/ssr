@@ -143,7 +143,7 @@ func testDeleteScan(t *testing.T) {
 }
 
 func testListScans(t *testing.T) {
-	req, err := http.NewRequest(http.MethodGet, "http://localhost:8080/scans?limit=1", nil)
+	req, err := http.NewRequest(http.MethodGet, "http://localhost:8080/scans?limit=1&page=1", nil)
 	require.NoError(t, err)
 
 	client := http.Client{}

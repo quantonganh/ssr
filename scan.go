@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type Status int64
@@ -23,13 +24,23 @@ func (s Status) String() string {
 }
 
 type Scan struct {
-	ID uuid.UUID `json:"id"`
+	ID uuid.UUID `json:"id" gorm:"type:uuid"`
 	Status     Status   `json:"status"`
 	RepositoryID uint64 `json:"repository_id"`
 	Findings   Findings `json:"findings"`
 	QueuedAt time.Time `json:"queued_at"`
 	ScanningAt time.Time `json:"scanning_at"`
 	FinishedAt time.Time `json:"finished_at"`
+	Repository Repository `gorm:"foreignKey:RepositoryID"`
+}
+
+func (Scan) TableName() string {
+	return "scan"
+}
+
+func (s *Scan) BeforeCreate(tx *gorm.DB) (err error) {
+	s.ID = uuid.New()
+	return
 }
 
 type Findings []Finding
@@ -74,13 +85,7 @@ func (f *Findings) Scan(value interface{}) error {
 type ScanService interface {
 	CreateScan(s *Scan) (*Scan, error)
 	GetScan(id uuid.UUID) (*Scan, error)
-	ListScans(param FetchParam) (scans []*Scan, nextCursor string, err error)
+	ListScans(page, limit int) (scans []*Scan, err error)
 	UpdateScan(id uuid.UUID, status Status, findings Findings) (*Scan, error)
 	DeleteScan(id uuid.UUID) error
 }
-
-type FetchParam struct {
-	Limit uint64
-	Cursor string
-}
-

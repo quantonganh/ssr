@@ -59,6 +59,7 @@ jobs:
       - name: Run integration test
         run: |-
           docker-compose up -d
+          psql -c "INSERT INTO repository (provider, full_name, description) VALUES ('GitHub', 'quantonganh', 'Security Scan Result')" postgresql://postgres:ssr@127.0.0.1:5432/ssr
           make integration-test
 
       - name: Display logs

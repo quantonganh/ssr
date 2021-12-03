@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -10,6 +9,8 @@ import (
 
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 
 	"github.com/quantonganh/ssr"
 	"github.com/quantonganh/ssr/http"
@@ -67,8 +68,12 @@ type app struct {
 func NewApp(config *ssr.Config) (*app, error) {
 	psqlConn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", config.DB.Host, config.DB.Port, config.DB.User, config.DB.Password, config.DB.Name)
 
-	db, err := sql.Open("postgres", psqlConn)
+	db, err := gorm.Open(postgres.Open(psqlConn), &gorm.Config{})
 	if err != nil {
+		return nil, err
+	}
+
+	if err := db.AutoMigrate(&ssr.Repository{}, &ssr.Scan{}); err != nil {
 		return nil, err
 	}
 

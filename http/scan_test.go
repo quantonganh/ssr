@@ -46,9 +46,7 @@ func TestScanHandler(t *testing.T) {
 	scanService.On("GetScan", scanID).Return(scan, nil)
 	scanService.On("UpdateScan", scanID, scan.Status, ssr.Findings{finding}).Return(scan, nil)
 	scanService.On("DeleteScan", scanID).Return(nil)
-	scanService.On("ListScans", ssr.FetchParam{
-		Limit:  1,
-	}).Return([]*ssr.Scan{scan}, "", nil)
+	scanService.On("ListScans", 1, 1).Return([]*ssr.Scan{scan}, nil)
 
 	t.Run("create scan", func(t *testing.T) {
 		testCreateScanHandler(t, scan, scanService)
@@ -118,7 +116,7 @@ func testDeleteScanHandler(t *testing.T, scanID uuid.UUID, scanService ssr.ScanS
 }
 
 func testListScansHandler(t *testing.T, scanService ssr.ScanService) {
-	req := httptest.NewRequest(http.MethodGet, "/scans?limit=1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/scans?limit=1&page=1", nil)
 	rr := httptest.NewRecorder()
 	s := NewServer(nil, scanService)
 	s.router.ServeHTTP(rr, req)

@@ -107,21 +107,19 @@ func (s *Server) DeleteScanHandler(w http.ResponseWriter, r *http.Request) error
 }
 
 func (s *Server) ListScansHandler(w http.ResponseWriter, r *http.Request) error {
-	limitStr := r.FormValue("limit")
-	limit, err := strconv.ParseInt(limitStr, 10, 64)
+	limit, err := strconv.Atoi(r.FormValue("limit"))
 	if err != nil {
 		return NewError(err, http.StatusBadRequest, "Bad request: invalid limit parameter")
 	}
 	if limit == 0 {
 		limit = defaultLimit
 	}
-	cursor := r.FormValue("cursor")
-	param := ssr.FetchParam{
-		Limit:  uint64(limit),
-		Cursor: cursor,
+	page, err := strconv.Atoi(r.FormValue("page"))
+	if err != nil {
+		return NewError(err, http.StatusBadRequest, "Bad request: invalid page parameter")
 	}
 
-	scans, nextCursor, err := s.ScanService.ListScans(param)
+	scans, err := s.ScanService.ListScans(page, limit)
 	if err != nil {
 		return err
 	}
@@ -130,8 +128,6 @@ func (s *Server) ListScansHandler(w http.ResponseWriter, r *http.Request) error 
 	if err != nil {
 		return errors.Wrapf(err, "failed to marshal scans result")
 	}
-
-	w.Header().Set("X-NextCursor", nextCursor)
 
 	_, err = w.Write(response)
 	if err != nil {
