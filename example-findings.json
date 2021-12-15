@@ -1,0 +1,41 @@
+{
+  "status": 3,
+  "repository_id": 1,
+  "findings": [
+    {
+      "type": "sast",
+      "rule_id": "G402",
+      "location": {
+        "path": "connectors/apigateway.go",
+        "positions": {
+          "begin": {
+            "line": 60
+          }
+        }
+      },
+      "metadata": {
+        "description": "TLS InsecureSkipVerify set true.",
+        "severity": "HIGH"
+      }
+    },
+    {
+      "type": "sast",
+      "rule_id": "G404",
+      "location": {
+        "path": "util/util.go",
+        "positions": {
+          "begin": {
+            "line": 32
+          }
+        }
+      },
+      "metadata": {
+        "description": "Use of weak random number generator (math/rand instead of crypto/rand)",
+        "severity": "HIGH"
+      }
+    }
+  ],
+  "queued_at": "2021-11-03T03:16:05.270Z",
+  "scanning_at": "2021-11-03T03:17:05.270Z",
+  "finished_at": "2021-11-03T03:18:05.270Z"
+}
